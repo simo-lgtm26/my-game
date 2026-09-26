@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تحدي المعرفة</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+    .card { background: #1e1e1e; padding: 20px; border-radius: 16px; width: 100%; max-width: 450px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); text-align: center; }
+    .header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; background: #2a2a2a; padding: 10px 15px; border-radius: 8px; }
+    .question { font-size: 1.2rem; margin-bottom: 20px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    button { background: #2c2c2e; border: 2px solid #3a3a3c; color: white; padding: 12px; border-radius: 10px; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #3a3a3c; }
+    button.correct { background: #2e7d32 !important; border-color: #4caf50; }
+    button.wrong { background: #c62828 !important; border-color: #ef5350; }
+    .helpers { display: flex; justify-content: space-around; margin-top: 20px; }
+    .helper-btn { background: #0288d1; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span>💰 الرصيد: <span id="money">0</span>$</span>
+      <span>⏱️ الوقت: <span id="timer">15</span>s</span>
+    </div>
+    <div class="question" id="question">جاري تحميل السؤال...</div>
+    <div class="options" id="options"></div>
+    <div class="helpers">
+      <button class="helper-btn" onclick="useFiftyFifty()">حذف إجابتين (50:50)</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "ما هي عاصمة الجزائر؟", options: ["وهران", "الجزائر", "قسنطينة", "عنابة"], answer: 1 },
+      { q: "كم عدد أضلاع المربع؟", options: ["3", "4", "5", "6"], answer: 1 },
+      { q: "ما هو أسرع كائن حي بري؟", options: ["الأسد", "الفهد", "الغزال", "الحصان"], answer: 1 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timer = 15;
+    let interval;
+
+    function loadQuestion() {
+      if (currentQ >= questions.length) {
+        document.querySelector('.card').innerHTML = `<h2>🎉 تهانينا!</h2><p>أنهيت اللعبة برصيد: ${score}$</p><button onclick="location.reload()">إعادة اللعب</button>`;
+        return;
+      }
+      clearInterval(interval);
+      timer = 15;
+      document.getElementById('timer').innerText = timer;
+      interval = setInterval(updateTimer, 1000);
+
+      const q = questions[currentQ];
+      document.getElementById('question').innerText = q.q;
+      const optionsDiv = document.getElementById('options');
+      optionsDiv.innerHTML = '';
+      
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(idx, btn);
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, btn) {
+      clearInterval(interval);
+      const correct = questions[currentQ].answer;
+      const btns = document.getElementById('options').children;
+
+      if (selected === correct) {
+        btn.classList.add('correct');
+        score += 100;
+        document.getElementById('money').innerText = score;
+      } else {
+        btn.classList.add('wrong');
+        btns[correct].classList.add('correct');
+      }
+
+      setTimeout(() => {
+        currentQ++;
+        loadQuestion();
+      }, 1200);
+    }
+
+    function updateTimer() {
+      timer--;
+      document.getElementById('timer').innerText = timer;
+      if (timer <= 0) {
+        clearInterval(interval);
+        currentQ++;
+        loadQuestion();
+      }
+    }
+
+    function useFiftyFifty() {
+      const correct = questions[currentQ].answer;
+      const btns = Array.from(document.getElementById('options').children);
+      let removed = 0;
+      btns.forEach((btn, idx) => {
+        if (idx !== correct && removed < 2) {
+          btn.style.visibility = 'hidden';
+          removed++;
+        }
+      });
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
